@@ -16,11 +16,7 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(express.static(path.join(__dirname, "client/dist")));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "client/dist", "index.html"));
-});
 
 // Body parser middleware
 app.use(express.json());
@@ -65,12 +61,22 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/enquiries", require("./routes/enquiryRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
 
-// 404 handler
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Route not found",
-  });
+
+const __dirnamePath = path.resolve();
+app.use(express.static(path.join(__dirnamePath, "client", "dist")));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirnamePath, "client", "dist", "index.html"));
+});
+
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith("/api")) {
+    return res.status(404).json({
+      success: false,
+      message: "Route not found",
+    });
+  }
+  next();
 });
 
 // Error handler middleware (must be last)
